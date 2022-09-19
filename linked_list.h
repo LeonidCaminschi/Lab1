@@ -1,5 +1,6 @@
 #pragma once
 #include <stdbool.h>
+#include <stddef.h>
 
 struct Node {
     int value;
@@ -7,64 +8,80 @@ struct Node {
     struct Node* last;
 };
 
-void Append(struct Node* head, struct Node* tail, int value) {
-    if(head == NULL) {
-        head = (struct Node*) malloc(sizeof(struct Node));
-        tail = head;
+void Append(struct Node** head, int value) {
+    if((*head) == NULL) {
+        (*head) = (struct Node*) malloc(sizeof(struct Node));
+        (*head)->value = value;
     } else {
         struct Node* toAdd = (struct Node*) malloc(sizeof(struct Node));
         toAdd->value = value;
+        struct Node *tail = *head;
+        while (tail->next != NULL)
+            tail = tail->next;
         tail->next = toAdd;
         toAdd->last = tail;
-        tail = toAdd;
+        toAdd->next = NULL;
     }
 }
 
-void Prepend(struct Node* head, struct Node* tail, int value) {
+void Prepend(struct Node** head, int value) {
     if(head == NULL) {
-        head = (struct Node*) malloc(sizeof(struct Node));
-        tail = head;
+        (*head) = (struct Node*) malloc(sizeof(struct Node));
+        (*head)->value = value;
     } else {
         struct Node* toAdd = (struct Node*) malloc(sizeof(struct Node));
         toAdd->value = value;
-        toAdd->next = head;
-        head->last = toAdd;
-        head = toAdd;
+        toAdd->next = (*head);
+        (*head)->last = toAdd;
+        (*head) = toAdd;
     }
 }
 
-void Reverse(struct Node* head, struct Node* tail) {
+void printList(struct Node* head) {
+    struct Node* ptr = head;
+
+    while(ptr != NULL) {
+        printf("%d ", ptr->value);
+        ptr = ptr->next;
+    }
+    printf("\n");
+}
+
+void Reverse(struct Node** head) {
     if(head == NULL) {
         printf("Nothing to reverse, please add some elements\n");
     } else {
+        struct Node *tail = *head;
+        while (tail->next != NULL)
+            tail = tail->next;
+
         struct Node* ptr = tail;
         struct Node* transitional;
-        while(ptr->last == NULL) {
+        while(ptr != NULL) {
             transitional = ptr->last;
             ptr->last = ptr->next;
             ptr->next = transitional;
             ptr = ptr->next;
         }
-        head = transitional;
-        head = tail;
-        tail = transitional;
+        (*head) = tail;
     }
 }
 
-void addElement(struct Node* head, int value, int index) {
+void addElement(struct Node** head, int value, int index) {
     if (index <= 0) {
         printf("Please introduce a valid positive index\n");
     }
 
-    struct Node* ptr = head;
+    struct Node* ptr = (*head);
     int element = 1;
 
-    while(ptr->next != NULL) {
+    while(ptr != NULL) {
         if(element == index) {
             struct Node* toAdd = (struct Node*) malloc(sizeof(struct Node));
             toAdd->value = value;
             toAdd->last = ptr->last;
             toAdd->next = ptr;
+            ptr->last->next = toAdd;
             ptr->last = toAdd;
             break;
         } else {
@@ -78,12 +95,12 @@ void addElement(struct Node* head, int value, int index) {
     }
 }
 
-void removeElement(struct Node* head, int index) {
+void removeElement(struct Node** head, int index) {
     if (index <= 0) {
         printf("Please introduce a valid positive index\n");
     }
 
-    struct Node* ptr = head;
+    struct Node* ptr = (*head);
     int element = 1;
 
     while(ptr->next != NULL) {
@@ -91,7 +108,7 @@ void removeElement(struct Node* head, int index) {
             struct Node* toRemove = ptr;
             ptr->last->next = ptr->next;
             ptr->next->last = ptr->last;
-            free(ptr);
+            free(toRemove);
             break;
         } else {
             element++;
@@ -104,34 +121,34 @@ void removeElement(struct Node* head, int index) {
     }
 }
 
-void Sort(struct Node* head, struct Node* tail, bool asc) {
-    struct Node *tempData;
-    struct Node *current;
+void Sort(struct Node** head, bool asc) {
+    struct Node *transitional;
+    struct Node *ptr;
     struct Node *next;
 
     while (next != NULL) {
-        current = head;
-        next = current->next;
+        ptr = (*head);
+        next = ptr->next;
         while (next != NULL) {
             if (asc == true) {
-                if (current->value > next->value) {
-                    tempData = current;
-                    current = next;
-                    current->next = tempData;
-                    current->last = tempData->last;
-                    next = tempData;
-                    next->next = current->next;
-                    next->last = current;
+                if (ptr->value > next->value) {
+                    transitional = ptr;
+                    ptr = next;
+                    ptr->next = transitional;
+                    ptr->last = transitional->last;
+                    next = transitional;
+                    next->next = ptr->next;
+                    next->last = ptr;
                 }
             } else {
-                if (current->value < next->value) {
-                    tempData = current;
-                    current = next;
-                    current->next = tempData;
-                    current->last = tempData->last;
-                    next = tempData;
-                    next->next = current->next;
-                    next->last = current;
+                if (ptr->value < next->value) {
+                    transitional = ptr;
+                    ptr = next;
+                    ptr->next = transitional;
+                    ptr->last = transitional->last;
+                    next = transitional;
+                    next->next = ptr->next;
+                    next->last = ptr;
                 }
             }
         }
@@ -144,14 +161,14 @@ bool find(struct Node* head, int value) {
 
     while(ptr->next != NULL) {
         if(ptr->value == value) {
-            printf("There exists such cell with value %d at index %d", value, index);
+            printf("There exists such cell with value %d at index %d \n", value, index);
             return true;
         }
         index++;
         ptr = ptr->next;
     }
 
-    printf("There doesen't exist such cell with value %d", value);
+    printf("There doesen't exist such cell with value %d \n", value);
     return false;
 }
 
@@ -162,12 +179,25 @@ void combineLists(struct Node* head1, struct Node* last1, struct Node* head2, st
     head2 = head1;
 }
 
-void Backwards(struct Node* tail) {
+void Backwards(struct Node** head) {
+    struct Node *tail = *head;
+    while (tail->next != NULL)
+        tail = tail->next;
     struct Node* ptr = tail;
 
-    while(ptr->last != NULL) {
+    while(ptr != NULL) {
         printf("%d ", ptr->value);
         ptr = ptr->last;
     }
     printf("\n");
+}
+
+void Destroy(struct Node** head) {
+    struct Node* ptr = (*head);
+
+    while(ptr != NULL) {
+        struct Node* toRemove = ptr;
+        ptr = ptr->next;
+        free(toRemove);
+    }
 }
