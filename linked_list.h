@@ -1,6 +1,8 @@
 #pragma once
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 struct Node {
     int value;
@@ -103,11 +105,19 @@ void removeElement(struct Node** head, int index) {
     struct Node* ptr = (*head);
     int element = 1;
 
-    while(ptr->next != NULL) {
+    while(ptr != NULL) {
         if(element == index) {
             struct Node* toRemove = ptr;
+            if (ptr->last != NULL)
             ptr->last->next = ptr->next;
+            if (ptr->next != NULL)
             ptr->next->last = ptr->last;
+            if (index == 1 && ptr->next != NULL) {
+                *head = ptr->next;
+            }
+            if (index == 1 && ptr->next == NULL) {
+                *head = NULL;
+            }
             free(toRemove);
             break;
         } else {
@@ -122,33 +132,79 @@ void removeElement(struct Node** head, int index) {
 }
 
 void Sort(struct Node** head, bool asc) {
-    struct Node *transitional;
     struct Node *ptr;
     struct Node *next;
 
-    while (next != NULL) {
+    int elements = 0;
+    struct Node *tail = *head;
+    while (tail->next != NULL) {
+        tail = tail->next;
+        elements++;
+    }
+
+   while(next != NULL) {
         ptr = (*head);
         next = ptr->next;
-        while (next != NULL) {
-            if (asc == true) {
+        while(next != NULL) {
+            if (asc) {
                 if (ptr->value > next->value) {
-                    transitional = ptr;
+                    struct Node* fuck = (struct Node*) malloc(sizeof(struct Node));
+                    fuck->value = next->value;
+                    fuck->next = ptr;
+                    fuck->last = ptr->last;
+
+                    if (ptr == *head) {
+                        *head = fuck;
+                    }
+
+                    if (ptr->last != NULL) {
+                        ptr->last->next = fuck;
+                    }
+
+                    if (next->next != NULL) {
+                        next->next->last = ptr;
+                    }
+
+                    ptr->next = next->next;
+                    ptr->last = fuck;
+
+                    free(next);
+
+                    ptr = *head;
+                    next = ptr->next;
+                } else {
                     ptr = next;
-                    ptr->next = transitional;
-                    ptr->last = transitional->last;
-                    next = transitional;
-                    next->next = ptr->next;
-                    next->last = ptr;
+                    next = next->next;
                 }
             } else {
                 if (ptr->value < next->value) {
-                    transitional = ptr;
+                    struct Node* fuck = (struct Node*) malloc(sizeof(struct Node));
+                    fuck->value = next->value;
+                    fuck->next = ptr;
+                    fuck->last = ptr->last;
+
+                    if (ptr == *head) {
+                        *head = fuck;
+                    }
+
+                    if (ptr->last != NULL) {
+                        ptr->last->next = fuck;
+                    }
+
+                    if (next->next != NULL) {
+                        next->next->last = ptr;
+                    }
+
+                    ptr->next = next->next;
+                    ptr->last = fuck;
+
+                    free(next);
+
+                    ptr = *head;
+                    next = ptr->next;
+                } else {
                     ptr = next;
-                    ptr->next = transitional;
-                    ptr->last = transitional->last;
-                    next = transitional;
-                    next->next = ptr->next;
-                    next->last = ptr;
+                    next = next->next;
                 }
             }
         }
@@ -159,7 +215,7 @@ bool find(struct Node* head, int value) {
     struct Node* ptr = head;
     int index = 1;
 
-    while(ptr->next != NULL) {
+    while(ptr != NULL) {
         if(ptr->value == value) {
             printf("There exists such cell with value %d at index %d \n", value, index);
             return true;
@@ -172,11 +228,12 @@ bool find(struct Node* head, int value) {
     return false;
 }
 
-void combineLists(struct Node* head1, struct Node* last1, struct Node* head2, struct Node* last2) {
-    last1->next = head2;
-    head2->last = last1;
-    last1 = last2;
-    head2 = head1;
+void combineLists(struct Node** head, struct Node** head2) {
+    struct Node* tail = *head2;
+    while (tail != NULL) {
+        Append(head, tail->value);
+        tail = tail->next;
+    }
 }
 
 void Backwards(struct Node** head) {
@@ -200,4 +257,28 @@ void Destroy(struct Node** head) {
         ptr = ptr->next;
         free(toRemove);
     }
+}
+
+void saveToFile(struct Node* head, char name[]) {
+    FILE* fp;
+    fp = fopen(name, "w");
+    struct Node* ptr = head;
+    while(ptr != NULL) {
+        fprintf(fp, "%d ", ptr->value);
+        ptr = ptr->next;
+    }
+    fclose(fp);
+}
+
+void getFromFile(struct Node** head, char name[]) {
+    FILE* fp;
+    fp = fopen(name, "r");
+
+    int fuck = 0;
+    while(!feof(fp)) {
+        fscanf(fp,"%d ",&fuck);
+        Append(head, fuck);
+    }
+
+    fclose(fp);
 }
